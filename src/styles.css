@@ -2,3 +2,16 @@
   font-family: sans-serif;
   text-align: center;
 }
+
+.ele-list {
+  overflow: scroll;
+  list-style-type: none;
+  padding: 0;
+}
+
+.ele-tile {
+  background-color: grey;
+  margin: 10px 0;
+  height: 150px;
+  width: 100%;
+}
