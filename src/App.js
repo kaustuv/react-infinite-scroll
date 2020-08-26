@@ -59,9 +59,15 @@ function PaginatedList({ data, listSize }) {
   const recycleDOM = (firstIdx) => {
     for (let i = 0; i < listSize; i++) {
       const tile = document.getElementById("ele-tile-" + i);
-      tile.firstElementChild.innerText = `${i + firstIdx}.${
-        elemsData[i + firstIdx].name
-      }`;
+      if (i === 0 || i === listSize - 1) {
+        tile.firstElementChild.innerText = `${">>> " + (i + firstIdx)}.${
+          elemsData[i + firstIdx].name
+        }`;
+      } else {
+        tile.firstElementChild.innerText = `${i + firstIdx}.${
+          elemsData[i + firstIdx].name
+        }`;
+      }
     }
   };
 
@@ -82,11 +88,14 @@ function PaginatedList({ data, listSize }) {
       isIntersecting
     ) {
       const firstIdx = getSlidingWindow(true);
-      // console.log("[botSent.slide] firstIdx:", firstIdx);
       adjustPaddings(true);
       recycleDOM(firstIdx);
       currIdx.current = firstIdx;
-      console.log("[botSent.intersect] currIdx", currIdx.current);
+      console.log(
+        `[botSent.intersect] visible range: (${currIdx.current},${
+          currIdx.current + listSize
+        })`
+      );
     }
 
     setBotSentPrevY(currentY);
@@ -112,11 +121,14 @@ function PaginatedList({ data, listSize }) {
       currIdx.current !== 0
     ) {
       const firstIdx = getSlidingWindow(false);
-      console.log("[topSent.slide] firstIdx:", firstIdx);
       adjustPaddings(false);
       recycleDOM(firstIdx);
       currIdx.current = firstIdx;
-      console.log("[topSent.intersect] currIdx", currIdx.current);
+      console.log(
+        `[topSent.intersect] visible range ->visible range: (${
+          currIdx.current
+        },${currIdx.current + listSize})`
+      );
     }
 
     setTopSentPrevY(currentY);
@@ -139,7 +151,7 @@ function PaginatedList({ data, listSize }) {
       {
         // root: document.querySelector("#scrollArea"),
         rootMargin: "30px",
-        threshold: 1.0
+        threshold: 0.5
       }
     );
     observer.current.observe(document.getElementById("ele-tile-0"));
