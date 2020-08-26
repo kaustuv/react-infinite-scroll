@@ -15,8 +15,8 @@ export default function App() {
 }
 
 function PaginatedList({ data, listSize }) {
-  const [currIdx, setCurrIdx] = useState(0);
-  const [firstIdx, setFirstIdx] = useState(0);
+  const currIdx = useRef(0);
+  // const [currIdx, setCurrIdx] = useState(0);
   const [topSentPrevY, setTopSentPrevY] = useState(0);
   const [topSentPrevRatio, setTopSentPrevRatio] = useState(0);
   const [botSentPrevY, setBotSentPrevY] = useState(0);
@@ -25,26 +25,18 @@ function PaginatedList({ data, listSize }) {
   const getNumFromStyle = (numStr) =>
     Number(numStr.substring(0, numStr.length - 2));
 
-  const recycleDOM = () => {
-    for (let i = 0; i < listSize; i++) {
-      const tile = document.getElementById("ele-tile-" + i);
-      console.log(i + firstIdx);
-      tile.firstElementChild.innerText = `${i + firstIdx}.${
-        elemsData[i + firstIdx].name
-      }`;
-    }
-  };
-
   const getSlidingWindow = (isScrollDown) => {
     const increment = listSize / 2;
+    let firstIdx = 0;
     if (isScrollDown) {
-      setFirstIdx(currIdx + increment);
+      firstIdx = currIdx.current + increment;
     } else {
-      setFirstIdx(currIdx - increment - listSize);
+      firstIdx = currIdx.current - increment;
     }
     if (firstIdx < 0) {
-      setFirstIdx(0);
+      firstIdx = 0;
     }
+    return firstIdx;
   };
 
   const adjustPaddings = (isScrollDown) => {
@@ -64,9 +56,18 @@ function PaginatedList({ data, listSize }) {
     }
   };
 
+  const recycleDOM = (firstIdx) => {
+    for (let i = 0; i < listSize; i++) {
+      const tile = document.getElementById("ele-tile-" + i);
+      tile.firstElementChild.innerText = `${i + firstIdx}.${
+        elemsData[i + firstIdx].name
+      }`;
+    }
+  };
+
   const botSentCallback = (node) => {
-    // console.log(node.target);
-    if (currIdx === _.keys(data).length - listSize) {
+    // console.log("[botSent.callback]", currIdx);
+    if (currIdx.current === _.keys(data).length - listSize) {
       // reached bottom
       return;
     }
@@ -80,10 +81,12 @@ function PaginatedList({ data, listSize }) {
       currentRatio > botSentPrevRatio &&
       isIntersecting
     ) {
-      getSlidingWindow(true);
+      const firstIdx = getSlidingWindow(true);
+      // console.log("[botSent.slide] firstIdx:", firstIdx);
       adjustPaddings(true);
-      recycleDOM();
-      setCurrIdx(firstIdx);
+      recycleDOM(firstIdx);
+      currIdx.current = firstIdx;
+      console.log("[botSent.intersect] currIdx", currIdx.current);
     }
 
     setBotSentPrevY(currentY);
@@ -91,7 +94,7 @@ function PaginatedList({ data, listSize }) {
   };
 
   const topSentCallback = (node) => {
-    if (currIdx === 0) {
+    if (currIdx.current === 0) {
       const container = document.getElementById("ele-list");
       container.style.paddingTop = "0px";
       container.style.paddingBottom = "0px";
@@ -101,17 +104,19 @@ function PaginatedList({ data, listSize }) {
     const currentRatio = node.intersectionRatio;
     const isIntersecting = node.isIntersecting;
 
-    // conditional check for scrolling down
+    // conditional check for scrolling up
     if (
       currentY > topSentPrevY &&
-      currentRatio >= topSentPrevRatio &&
       isIntersecting &&
-      currIdx
+      currentRatio >= topSentPrevRatio &&
+      currIdx.current !== 0
     ) {
-      getSlidingWindow(false);
+      const firstIdx = getSlidingWindow(false);
+      console.log("[topSent.slide] firstIdx:", firstIdx);
       adjustPaddings(false);
-      recycleDOM();
-      setCurrIdx(firstIdx);
+      recycleDOM(firstIdx);
+      currIdx.current = firstIdx;
+      console.log("[topSent.intersect] currIdx", currIdx.current);
     }
 
     setTopSentPrevY(currentY);
