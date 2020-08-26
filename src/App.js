@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef } from "react";
 import { elemsData } from "./data";
 import * as _ from "lodash";
 import "./styles.css";
